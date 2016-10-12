@@ -20,6 +20,11 @@ var alarms_list = document.getElementById('alarms');
 var current_time = document.getElementById('current-time');
 var form = document.getElementById('create-alarm-form');
 var modal = document.getElementById('alarm-modal');
+var time_of_day = document.getElementById('alarm-am-pm');
+time_of_day.addEventListener('click', function(e) {
+	e.preventDefault();
+	(this.innerHTML == "AM") ? this.innerHTML = "PM" : this.innerHTML = "AM";
+})
 
 // Globals
 var alarmRinging = false; 
@@ -50,7 +55,14 @@ var Alarm = function(name, time, ringtone) {
 	this.getTime = function() { return t; }
 	this.getName = function() { return n; }
 	this.isActive = function() { return active; }
-	this.setInactive = function() { active = false; }
+	this.toggleActive = function() { 
+		active = !active; 
+		if (active) {
+			this["dom_ref"].children[0].style.background = "green";
+		} else {
+			this["dom_ref"].children[0].style.background = "grey";
+		}
+	}
 }
 
 Alarm.prototype.ring = function() {
@@ -94,15 +106,24 @@ var AlarmClock = function() {
 
 	this.createAlarm = function(name, time, ringtone) {
 		var li = document.createElement("li");
-		var span = document.createElement("span");
+		var span1 = document.createElement("span");
+		var span2 = document.createElement("span");
 		var alarm_name = document.createTextNode(name);
 		var alarm_time = document.createTextNode(time);
-		var button = document.createElement("button");
-		var button_text = document.createTextNode("X");
+		var delete_button = document.createElement("button");
+		var delete_button_text = document.createTextNode("X");
+
+		var active = document.createElement("a");
+		active.className = 'toggle';
+
 
 		var alarm = new Alarm(name, time, ringtone);
 		alarm["dom_ref"] = li; 
 		alarms.push(alarm);
+
+		var toggleAlarm = function() {
+			this.toggleActive(); 
+		}
 
 		var deleteAlarm = function() {
 			var that = this; 
@@ -117,13 +138,17 @@ var AlarmClock = function() {
 			})
 		}
 
-		button.onclick = deleteAlarm.bind(alarm);
+		active.onclick = toggleAlarm.bind(alarm);
 
-		button.appendChild(button_text);
-		span.appendChild(alarm_time);
-		li.appendChild(span);
-		li.appendChild(alarm_name);
-		li.appendChild(button);
+		delete_button.onclick = deleteAlarm.bind(alarm);
+		delete_button.appendChild(delete_button_text);
+
+		span1.appendChild(alarm_time);
+		span2.appendChild(alarm_name);
+		li.appendChild(active);
+		li.appendChild(span1);
+		li.appendChild(span2);
+		li.appendChild(delete_button);
 
 		alarms_list.appendChild(li);
 	}
@@ -140,11 +165,10 @@ var AlarmClock = function() {
 			e.preventDefault();
 
 
-			var alarm_name = form.children[0].value;
+			var alarm_name = document.getElementById('alarm-name').value;
 			var h = document.getElementById('alarm-hours').value;
 			var m = document.getElementById('alarm-minutes').value;
-			var s = document.getElementById('alarm-seconds').value;
-			var alarm_time = pad(h) + ":" + pad(m) + ":" + pad(s);
+			var alarm_time = pad(h) + ":" + pad(m) + ":00";
 
 			var alarm_ringtone = document.getElementById('alarm-ringtone').value;
 

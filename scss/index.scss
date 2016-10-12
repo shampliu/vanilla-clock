@@ -3,9 +3,15 @@
 }
 
 body {
-  height: 100vh;
-  width: 100vw;
+	font-family: 'Helvetica Neue', sans-serif, serif;
+  height: 100%;
+  width: 100%;
 }
+
+// p {
+// 	margin: 0;
+// 	display: inline-block;
+// }
 
 .content {
 	height: 400px;
@@ -13,26 +19,104 @@ body {
 	display: block;
 
 	position: relative;
-  top: 50%;
-  transform: translateY(-50%);
 
-	margin: 0 auto;
+	margin: 100px auto;
 	#current-time-wrapper {
 		text-align: center;
 		#current-time {
+			font-size: 4em;
 
 		}
 	}
 
+	#create-alarm-form {
+		text-align: center;
+		#alarm-time {
+			#alarm-hours, #alarm-minutes, #alarm-am-pm {
+				vertical-align: bottom;
+				background: whitesmoke; 
+				border: none;
+				height: 60px;
+				width: 80px;
+				margin-bottom: 10px;
+				font-size: 30px;
+				text-align: center;
+				line-height: 60px;
+			}
+			#alarm-am-pm {
+				display: inline-block;
+				text-decoration: none;
+				color: gray;
+
+				&:hover {
+					cursor: pointer;
+				}
+			}
+		}
+		#alarm-name {
+			border: none;
+			background: whitesmoke;
+			height: 40px;
+			width: 250px;
+			margin-bottom: 10px;
+			padding-left: 10px;
+		}
+		#alarm-ringtone {
+			border: none;
+			background: whitesmoke;
+			height: 40px;
+			width: 250px;
+			margin-bottom: 10px;
+		}
+		#alarm-submit {
+			background: whitesmoke;
+			height: 40px;
+			width: 250px;
+			border: none;
+
+			&:hover {
+				cursor: pointer;
+			}
+
+		}
+		
+	}
+
 	#alarms {
+		height: 200px;
+		overflow: scroll;
 		padding: 0;
 
 		> li {
 			list-style-type: none;
-			width: 400px;
+			width: 250px;
+			height: 20px;
+			margin: 5px auto;
+			display: block;
 			
 			button {
 				float: right;
+				background: none;
+				border: none;
+				font-size: 16px;
+				&:hover {
+					cursor: pointer;
+				}
+			}
+
+			a.toggle {
+				margin-right: 5px;
+				line-height: 20px;
+				width: 20px;
+				background: green;
+				height: 20px;
+				display: inline-block;
+
+			}
+
+			span {
+				vertical-align: top;
+				margin-right: 5px;
 			}
 		}
 	}
@@ -56,5 +140,22 @@ body {
       border: 1px solid #888;
       width: 40%; 
     }
+	}
+
+	#theme-switcher {
+		position: fixed;
+		bottom: 40px;
+		right: 40px;
+
+		a {
+			display: inline-block;
+			background: whitesmoke;
+			text-align: center;
+			color: grey;
+			text-decoration: none;
+			line-height: 30px;
+			width: 75px;
+			height: 30px;
+		}
 	}
 }

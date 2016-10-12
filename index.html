@@ -12,31 +12,29 @@
     </div>
     <form id="create-alarm-form">
 
-      <input id="alarm-name" type="text" placeholder="Alarm Name"> 
-      <span>
-        <select id="alarm-ringtone">
-          <option value="fountain_of_dreams.mp3">Fountain of Dreams</option>
-          <option value="intro.mp3">The xx - Intro</option>
-        </select> 
-        Ringtone
-      </span>
-
-     
       <div id="alarm-time">
-        <span><input id="alarm-hours" type="text" placeholder="00" size="2" maxlength="2"> Hour</span> 
-        <span><input id="alarm-minutes" type="text" placeholder="00" size="2" maxlength="2"> Minutes</span> 
-        <span><input id="alarm-seconds" type="text" placeholder="00" size="2" maxlength="2"> Seconds</span>
+        <span><input id="alarm-hours" type="text" placeholder="00" size="2" maxlength="2"></span> 
+        <span><input id="alarm-minutes" type="text" placeholder="00" size="2" maxlength="2"></span> 
+        <span><a href="#" id="alarm-am-pm">AM</a></span>
       </div>
-     
-      <input type="submit" value="+"/> 
-    </form>
+      <input id="alarm-name" type="text" placeholder="Alarm Name"> 
+      <select id="alarm-ringtone">
+        <option value="fountain_of_dreams.mp3">Fountain of Dreams</option>
+        <option value="intro.mp3">The xx - Intro</option>
+      </select> 
 
+     
+      <input id="alarm-submit" type="submit" value="Add Alarm"/> 
+    </form>
+    
     <ul id="alarms">
-      <li>Alarm Name <button>X</button></li>
-      <li>Alarm 2 <button>X</button></li>
     </ul>
-    <a href="#" onclick="changeTheme('day.css', 1);">STYLE 1</a> 
-    <a href="#" onclick="changeTheme('night.css', 1);">STYLE 2</a>
+
+
+    <div id="theme-switcher">
+      <a href="#" onclick="changeTheme('day.css', 1);">Day</a> 
+      <a href="#" onclick="changeTheme('night.css', 1);">Night</a>
+    </div>
 
     <!-- Hidden -->
     <div id="alarm-modal" class="modal">
