@@ -118,8 +118,8 @@ var AlarmClock = function() {
 		span1.className = 'time'
 		var span2 = document.createElement("span");
 
-		alarm_count++; 
 		name = name == "" ? "Alarm " + alarm_count : name; // default alarm name if empty
+		alarm_count++; 
 
 		var alarm_name = document.createTextNode(name);
 		var alarm_time = document.createTextNode(formatTime(hr, min, true));
