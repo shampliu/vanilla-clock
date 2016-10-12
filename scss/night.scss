@@ -1,3 +1,6 @@
-body {
-	background: #383b4c;
-}
+$bg-body: #383b4c;
+$time-color: #f3f99d;
+$bg-submit: whitesmoke;
+$bg-box: whitesmoke;
+
+@import "base"; 
