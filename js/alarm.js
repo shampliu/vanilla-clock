@@ -36,19 +36,13 @@ function pad(t) {
 	}
 }
 
-function formatTime(hr, min, show_am_pm) {
-	if (show_am_pm) {
-		return hr > 12 ? pad(hr - 12) + ":" + pad(min) + "PM" : pad(hr) + ":" + pad(min) + "AM";
-	}
-	return hr > 12 ? pad(hr - 12) + ":" + pad(min) : pad(hr) + ":" + pad(min);
-}
-
 // API
-var Alarm = function(name, hr, min, ringtone) {
+var Alarm = function(name, time, am_pm, ringtone) {
 	var active = true; 
 	var n = name;
-	var time = pad(hr) + pad(min) + "00";
 	var rt = new Audio("ringtones/" + ringtone);
+	var t = time;
+	var ap = am_pm; 
 
 	if (typeof rt == 'boolean') { 
 		rt.loop = true; 
@@ -65,8 +59,9 @@ var Alarm = function(name, hr, min, ringtone) {
 		alarm_ringing = false; 
 	})
 
+	this.getAMPM = function() { return ap; }
 	this.getRingtone = function() { return rt; }
-	this.getTime = function() { return time; }
+	this.getTime = function() { return t; }
 	this.getName = function() { return n; }
 	this.isActive = function() { return active; }
 	this.toggleActive = function() { 
@@ -94,25 +89,28 @@ var AlarmClock = function() {
 		var hr = today.getHours();
 		var min = today.getMinutes();
 		var sec = today.getSeconds();
+		var am_pm = hr >= 12 ? "PM" : "AM";
+		time_info.children[0].innerHTML = am_pm;
+		hr = hr % 12;
+		hr = hr || 12; // handle 0AM == 12AM
 
-		var time = pad(hr) + pad(min) + pad(sec);
+		var time = pad(hr) + ":" + pad(min);
 
-		hr > 12 ? time_info.children[0].innerHTML = "PM" : time_info.children[0].innerHTML = "AM";
-		current_time.innerHTML = formatTime(hr, min, false);
+		current_time.innerHTML = time;
 
-		time_info.children[1].innerHTML = pad(today.getSeconds());
+		time_info.children[1].innerHTML = pad(sec);
 
 		if (alarm_ringing) return;
 
 		for (var i = 0; i < alarms.length; i++) {
-			if (alarms[i].isActive() && alarms[i].getTime() == time) {
+			if (alarms[i].isActive() && alarms[i].getTime() == time && alarms[i].getAMPM() == am_pm && sec == "00") {
 				alarms[i].ring(); 
-				return; 
+				return; // first alarm plays, ringtone has priority
 			}
 		}
 	}
 
-	this.createAlarm = function(name, hr, min, ringtone) {
+	this.createAlarm = function(name, time, am_pm, ringtone) {
 		var li = document.createElement("li");
 		var span1 = document.createElement("span");
 		span1.className = 'time'
@@ -122,7 +120,7 @@ var AlarmClock = function() {
 		alarm_count++; 
 
 		var alarm_name = document.createTextNode(name);
-		var alarm_time = document.createTextNode(formatTime(hr, min, true));
+		var alarm_time = document.createTextNode(time + am_pm);
 		var delete_button = document.createElement("button");
 		var delete_button_text = document.createTextNode("X");
 
@@ -130,7 +128,7 @@ var AlarmClock = function() {
 		active.className = 'toggle';
 
 
-		var alarm = new Alarm(name, hr, min, ringtone);
+		var alarm = new Alarm(name, time, am_pm, ringtone);
 		alarm["dom_ref"] = li; 
 		alarms.push(alarm);
 
@@ -178,15 +176,12 @@ var AlarmClock = function() {
 		form.addEventListener('submit', function(e) {
 			e.preventDefault();
 
-			var alarm_name = document.getElementById('alarm-name').value;
-			var h = Number(document.getElementById('alarm-hours').value);
-			var m = Number(document.getElementById('alarm-minutes').value);
-			if (toggle_am_pm.innerHTML == "PM") { h += 12; }
-
-			var alarm_ringtone = document.getElementById('alarm-ringtone').value;
-
-
-			that.createAlarm(alarm_name, h, m, alarm_ringtone);
+			var name = document.getElementById('alarm-name').value;
+			var hr = Number(document.getElementById('alarm-hours').value);
+			var min = Number(document.getElementById('alarm-minutes').value);
+			var time = pad(hr) + ":" + pad(min);
+			var ringtone = document.getElementById('alarm-ringtone').value;
+			toggle_am_pm.innerHTML == "PM" ? that.createAlarm(name, time, "PM", ringtone) : that.createAlarm(name, time, "AM", ringtone)
 
 			return false;
 		})
