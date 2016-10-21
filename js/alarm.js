@@ -15,76 +15,116 @@ toggle_am_pm.addEventListener('click', function(e) {
 	(this.innerHTML == "AM") ? this.innerHTML = "PM" : this.innerHTML = "AM";
 })
 
-// Globals
-var alarm_ringing = false; 
-var alarm_count = 1; 
-
-function changeTheme(css_file) {
-	var old_link = document.getElementsByTagName("link").item(0); // 0 is the index of the css file
-
-  var new_link = document.createElement("link");
-  new_link.setAttribute("rel", "stylesheet");
-  new_link.setAttribute("type", "text/css");
-  new_link.setAttribute("href", "css/" + css_file);
-
-  document.getElementsByTagName("head").item(0).replaceChild(new_link, old_link);
-}
-
+// Utility
 function pad(t) {
 	if (typeof t == 'number') {
 		return t < 10 ? "0" + t : t; 
 	}
 }
 
-// API
-var Alarm = function(name, time, am_pm, ringtone) {
-	var active = true; 
-	var n = name;
-	var rt = new Audio("ringtones/" + ringtone);
-	var t = time;
-	var ap = am_pm; 
+// Alarm UI
+function AlarmUI(alarm, document) {
+	this.alarm = alarm; 
+	var li = document.createElement('li');
+	var span1 = document.createElement("span");
+	span1.className = 'time'
+	var span2 = document.createElement("span");
 
-	if (typeof rt == 'boolean') { 
-		rt.loop = true; 
+	var alarm_name = document.createTextNode(this.alarm.name);
+	var alarm_time = document.createTextNode(this.alarm.time + this.alarm.am_pm);
+	var delete_button = document.createElement("button");
+	var delete_button_text = document.createTextNode("X");
+
+	var active = document.createElement("a");
+	active.className = 'toggle';
+
+	active.onclick = this.toggleActive.bind(this); 
+
+	this.element = li; 
+
+	delete_button.onclick = function() {
+		this.alarm.destroy(this.alarm);
+		this.element.parentNode.removeChild(this.element);
+	}.bind(this);
+
+	delete_button.appendChild(delete_button_text);
+
+	span1.appendChild(alarm_time);
+	span2.appendChild(alarm_name);
+	li.appendChild(active);
+	li.appendChild(span1);
+	li.appendChild(span2);
+	li.appendChild(delete_button);
+
+	alarms_list.appendChild(li);
+}
+
+AlarmUI.prototype.updateDOM = function() {
+
+}
+
+AlarmUI.prototype.toggleActive = function() {
+	alarm.toggleActive();
+
+	if(alarm.active) {
+		this.element.children[0].style.background = "#54a754";
 	} else {
-		rt.addEventListener('ended', function() {
+		this.element.children[0].style.background = "lightgrey";
+	}
+
+
+}
+
+function Alarm(name, time, am_pm, ringtone, parent) {
+	this.active = true; 
+	this.name = name == "" ? "Alarm " + (parent.alarms.length + 1) : name; // default alarm name if empty
+	this.ringtone = new Audio("ringtones/" + ringtone);
+	this.time = time;
+	this.am_pm = am_pm; 
+	this.parent = parent; 
+
+	if (typeof this.ringtone == 'boolean') { 
+		this.ringtone.loop = true; 
+	} else {
+		this.ringtone.addEventListener('ended', function() {
       this.currentTime = 0;
       this.play();
     }, false);
 	}
 
-	document.getElementById('stop-alarm').addEventListener('click', function() {
+	document.getElementById('stop-alarm').onclick = function() {
 		modal.style.display = "none";
-		rt.pause(); 
-		alarm_ringing = false; 
-	})
+		this.ringtone.pause();
+		this.parent.alarm_ringing = false;
+	}.bind(this); 
+}
 
-	this.getAMPM = function() { return ap; }
-	this.getRingtone = function() { return rt; }
-	this.getTime = function() { return t; }
-	this.getName = function() { return n; }
-	this.isActive = function() { return active; }
-	this.toggleActive = function() { 
-		active = !active; 
-		if (active) {
-			this["dom_ref"].children[0].style.background = "#54a754";
-		} else {
-			this["dom_ref"].children[0].style.background = "lightgrey";
-		}
-	}
+Alarm.prototype.toggleActive = function() {
+	this.active = !this.active; 
 }
 
 Alarm.prototype.ring = function() {
-	alarm_ringing = true; 
-	this.getRingtone().play();
-	document.getElementById('alarm-modal-text').innerHTML = this.getName();
+	this.parent.alarm_ringing = true; 
+	this.ringtone.play();
+	document.getElementById('alarm-modal-text').innerHTML = this.name;
 	modal.style.display = "block";
 }
 
-var AlarmClock = function() {
-	var alarms = []; 
+Alarm.prototype.destroy = function(alarm) {
+	var that = this; 
+	this.parent.alarms.forEach(function(value, i) {
+		if (value == alarm) {
+			that.parent.alarms.splice(i, 1);
+			return;
+		}
+	});
+}
 
-	function updateTime() {
+var AlarmClock = function() {
+	this.alarms = []; 
+	this.alarm_ringing = false;
+
+	this.updateTime = function() {
 		var today = new Date(); 
 		var hr = today.getHours();
 		var min = today.getMinutes();
@@ -100,78 +140,28 @@ var AlarmClock = function() {
 
 		time_info.children[1].innerHTML = pad(sec);
 
-		if (alarm_ringing) return;
+		if (this.alarm_ringing) return;
 
-		for (var i = 0; i < alarms.length; i++) {
-			if (alarms[i].isActive() && alarms[i].getTime() == time && alarms[i].getAMPM() == am_pm && sec == "00") {
-				alarms[i].ring(); 
+		for (var i = 0; i < this.alarms.length; i++) {
+			if (this.alarms[i].active && this.alarms[i].time == time && this.alarms[i].am_pm == am_pm && sec == "00") {
+				this.alarms[i].ring(); 
 				return; // first alarm plays, ringtone has priority
 			}
 		}
 	}
 
 	this.createAlarm = function(name, time, am_pm, ringtone) {
-		var li = document.createElement("li");
-		var span1 = document.createElement("span");
-		span1.className = 'time'
-		var span2 = document.createElement("span");
-
-		name = name == "" ? "Alarm " + alarm_count : name; // default alarm name if empty
-		alarm_count++; 
-
-		var alarm_name = document.createTextNode(name);
-		var alarm_time = document.createTextNode(time + am_pm);
-		var delete_button = document.createElement("button");
-		var delete_button_text = document.createTextNode("X");
-
-		var active = document.createElement("a");
-		active.className = 'toggle';
-
-
-		var alarm = new Alarm(name, time, am_pm, ringtone);
-		alarm["dom_ref"] = li; 
-		alarms.push(alarm);
-
-		var toggleAlarm = function() {
-			this.toggleActive(); 
-		}
-
-		var deleteAlarm = function() {
-			alarm_count--; 
-			var that = this; 
-			var child = this["dom_ref"];
-			child.parentNode.removeChild(child);
-
-			alarms.forEach(function(value, i) {
-				if (value == that) {
-					alarms.splice(i, 1);
-					return;
-				}
-			})
-		}
-
-		active.onclick = toggleAlarm.bind(alarm);
-
-		delete_button.onclick = deleteAlarm.bind(alarm);
-		delete_button.appendChild(delete_button_text);
-
-		span1.appendChild(alarm_time);
-		span2.appendChild(alarm_name);
-		li.appendChild(active);
-		li.appendChild(span1);
-		li.appendChild(span2);
-		li.appendChild(delete_button);
-
-		alarms_list.appendChild(li);
+		var alarm = new Alarm(name, time, am_pm, ringtone, this);
+		var alarm_ui = new AlarmUI(alarm, document); 
+		this.alarms.push(alarm);
 	}
 
 	this.init = function() {
-		updateTime(); // called so the alarm clock doesn't wait refresh_rate until it appears in HTML
-		setInterval(function() {
-			updateTime(); 
-		}, refresh_rate)
-
+		this.updateTime(); // called so the alarm clock doesn't wait refresh_rate until it appears in HTML
 		var that = this;
+		setInterval(function() {
+			that.updateTime(); 
+		}, refresh_rate)
 
 		form.addEventListener('submit', function(e) {
 			e.preventDefault();
