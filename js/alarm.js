@@ -5,7 +5,6 @@ var refresh_rate = 1000;
 
 // DOM Elements
 var alarms_list = document.getElementById('alarms');
-var current_time = document.getElementById('current-time');
 var form = document.getElementById('create-alarm-form');
 var modal = document.getElementById('alarm-modal');
 var time_info = document.getElementById('current-time-info');
@@ -59,14 +58,10 @@ function AlarmUI(alarm, document) {
 	alarms_list.appendChild(li);
 }
 
-AlarmUI.prototype.updateDOM = function() {
-
-}
-
 AlarmUI.prototype.toggleActive = function() {
-	alarm.toggleActive();
+	this.alarm.toggleActive();
 
-	if(alarm.active) {
+	if(this.alarm.active) {
 		this.element.children[0].style.background = "#54a754";
 	} else {
 		this.element.children[0].style.background = "lightgrey";
@@ -92,11 +87,7 @@ function Alarm(name, time, am_pm, ringtone, parent) {
     }, false);
 	}
 
-	document.getElementById('stop-alarm').onclick = function() {
-		modal.style.display = "none";
-		this.ringtone.pause();
-		this.parent.alarm_ringing = false;
-	}.bind(this); 
+	this.dom_element = new AlarmUI(this, document); 
 }
 
 Alarm.prototype.toggleActive = function() {
@@ -121,8 +112,9 @@ Alarm.prototype.destroy = function(alarm) {
 }
 
 var AlarmClock = function() {
+	var alarm_ringing = false;
+
 	this.alarms = []; 
-	this.alarm_ringing = false;
 
 	this.updateTime = function() {
 		var today = new Date(); 
@@ -136,15 +128,23 @@ var AlarmClock = function() {
 
 		var time = pad(hr) + ":" + pad(min);
 
+		var current_time = document.getElementById('current-time');
+
 		current_time.innerHTML = time;
 
 		time_info.children[1].innerHTML = pad(sec);
 
-		if (this.alarm_ringing) return;
-
 		for (var i = 0; i < this.alarms.length; i++) {
-			if (this.alarms[i].active && this.alarms[i].time == time && this.alarms[i].am_pm == am_pm && sec == "00") {
-				this.alarms[i].ring(); 
+			var curr_alarm = this.alarms[i]; 
+			if (curr_alarm.active && curr_alarm.time == time && curr_alarm.am_pm == am_pm && sec == "00" && !(alarm_ringing)) {
+				document.getElementById('stop-alarm').onclick = function() {
+					modal.style.display = "none";
+					curr_alarm.ringtone.pause();
+				}.bind(curr_alarm); 
+
+				curr_alarm.ring(); 
+
+				alarm_ringing = true;
 				return; // first alarm plays, ringtone has priority
 			}
 		}
@@ -152,13 +152,14 @@ var AlarmClock = function() {
 
 	this.createAlarm = function(name, time, am_pm, ringtone) {
 		var alarm = new Alarm(name, time, am_pm, ringtone, this);
-		var alarm_ui = new AlarmUI(alarm, document); 
 		this.alarms.push(alarm);
 	}
 
 	this.init = function() {
+		var that = this; 
+
 		this.updateTime(); // called so the alarm clock doesn't wait refresh_rate until it appears in HTML
-		var that = this;
+
 		setInterval(function() {
 			that.updateTime(); 
 		}, refresh_rate)

@@ -12,6 +12,5 @@ function changeTheme(css_file) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-	
   var alarmClock = new AlarmClock().init();
 });
